@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-// Entferne 'prospect_gallery_screen.dart', da wir ProspectDetailScreen nutzen
 
 class LocationInputScreen extends StatefulWidget {
   const LocationInputScreen({super.key});
@@ -13,7 +12,7 @@ class LocationInputScreen extends StatefulWidget {
 class _LocationInputScreenState extends State<LocationInputScreen> {
   final TextEditingController _controller = TextEditingController();
   List<Map<String, dynamic>> _suggestions = [];
-  final String _apiKey = 'AIzaSyD6fPkN_hPJyCORGTAUnlnCYxTNIndG8zM'; // Dein Key
+  final String _apiKey = 'MY:API'; // Dein Key
 
   @override
   void dispose() {
@@ -90,71 +89,68 @@ class _LocationInputScreenState extends State<LocationInputScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5), // Heller Hintergrund
       appBar: AppBar(
         title: const Text('Standort eingeben'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF212121)), // Dunkelgrau
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFFE0B2), Colors.white],
-          ),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _controller,
-                  decoration: InputDecoration(
-                    hintText: 'PLZ oder Stadt eingeben...',
-                    border: InputBorder.none,
-                    prefixIcon: const Icon(Icons.location_on, color: Color(0xFFAB47BC)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
                   ),
-                  onChanged: (value) => _fetchSuggestions(value),
+                ],
+              ),
+              child: TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText: 'PLZ oder Stadt eingeben...',
+                  hintStyle: const TextStyle(color: Color(0xFF757575)), // Grau
+                  border: InputBorder.none,
+                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF757575)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 ),
+                onChanged: (value) => _fetchSuggestions(value),
               ),
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _suggestions.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: const Icon(Icons.location_city, color: Color(0xFFAB47BC)),
-                    title: Text(_suggestions[index]['description']),
-                    onTap: () async {
-                      try {
-                        String coordinates = await _getCoordinates(_suggestions[index]['placeId']);
-                        Navigator.pop(context, coordinates); // Rückgabe des Standorts
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Fehler: $e')),
-                        );
-                      }
-                    },
-                  );
-                },
-              ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _suggestions.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  leading: const Icon(Icons.location_city, color: Color(0xFF757575)),
+                  title: Text(
+                    _suggestions[index]['description'],
+                    style: const TextStyle(color: Color(0xFF212121)), // Dunkelgrau
+                  ),
+                  onTap: () async {
+                    try {
+                      String coordinates = await _getCoordinates(_suggestions[index]['placeId']);
+                      Navigator.pop(context, coordinates);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Fehler: $e')),
+                      );
+                    }
+                  },
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

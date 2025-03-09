@@ -15,20 +15,20 @@ class ProspektApp extends StatelessWidget {
     return MaterialApp(
       title: 'Prospekt App',
       theme: ThemeData(
-        primaryColor: const Color(0xFF26C6DA),
-        scaffoldBackgroundColor: Colors.white,
+        primaryColor: const Color(0xFF4CAF50), // Grün
+        scaffoldBackgroundColor: const Color(0xFFF5F5F5), // Heller Hintergrund
         textTheme: const TextTheme(
           headlineLarge: TextStyle(
             fontFamily: 'Nunito',
             fontWeight: FontWeight.w800,
             fontSize: 28,
-            color: Color(0xFF212121),
+            color: Color(0xFF212121), // Dunkelgrau
           ),
           bodyMedium: TextStyle(
             fontFamily: 'Nunito',
             fontWeight: FontWeight.normal,
-            fontSize: 16,
-            color: Color(0xFF757575),
+            fontSize: 14,
+            color: Color(0xFF757575), // Grau
           ),
           labelLarge: TextStyle(
             fontFamily: 'Nunito',
@@ -39,8 +39,8 @@ class ProspektApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFF8C00),
-            foregroundColor: const Color(0xFFFFA726),
+            backgroundColor: const Color(0xFF4CAF50), // Grün
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             elevation: 5,
@@ -48,7 +48,7 @@ class ProspektApp extends StatelessWidget {
         ),
         cardTheme: CardTheme(
           elevation: 5,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           color: Colors.white,
         ),
         visualDensity: VisualDensity.adaptivePlatformDensity,
