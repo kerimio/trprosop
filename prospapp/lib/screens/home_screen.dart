@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'location_input_screen.dart';
 import 'prospect_gallery_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -36,15 +37,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Future<void> _getLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bitte aktiviere den Standortdienst')));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LocationInputScreen()),
+      );
       return;
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      if (permission == LocationPermission.denied) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LocationInputScreen()),
+        );
+        return;
+      }
     }
 
     Position position = await Geolocator.getCurrentPosition(
@@ -68,10 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFE0B2), // Helles Orange
-              Colors.white,
-            ],
+            colors: [Color(0xFFFFE0B2), Colors.white],
           ),
         ),
         child: Center(
@@ -111,6 +117,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       shadowColor: Colors.transparent,
                     ),
                     child: const Text('Meinen Standort verwenden'),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LocationInputScreen()),
+                    );
+                  },
+                  child: Text(
+                    'Oder Standort manuell eingeben',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFFAB47BC),
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               ],
