@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'prospect_gallery_screen.dart';
+// Entferne 'prospect_gallery_screen.dart', da wir ProspectDetailScreen nutzen
 
 class LocationInputScreen extends StatefulWidget {
   const LocationInputScreen({super.key});
@@ -13,7 +13,7 @@ class LocationInputScreen extends StatefulWidget {
 class _LocationInputScreenState extends State<LocationInputScreen> {
   final TextEditingController _controller = TextEditingController();
   List<Map<String, dynamic>> _suggestions = [];
-  final String _apiKey = 'MY_API_KEY'; // Dein Key
+  final String _apiKey = 'AIzaSyD6fPkN_hPJyCORGTAUnlnCYxTNIndG8zM'; // Dein Key
 
   @override
   void dispose() {
@@ -35,10 +35,11 @@ class _LocationInputScreenState extends State<LocationInputScreen> {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': _apiKey,
-        'X-Goog-FieldMask': 'suggestions.placePrediction.text,suggestions.placePrediction.placeId', // Entfernte Sternchen für Klarheit
+        'X-Goog-FieldMask': 'suggestions.placePrediction.text,suggestions.placePrediction.placeId',
       },
       body: jsonEncode({
-        'input': input
+        'input': input,
+        'languageCode': 'de',
       }),
     );
 
@@ -52,7 +53,7 @@ class _LocationInputScreenState extends State<LocationInputScreen> {
         setState(() {
           _suggestions = (data['suggestions'] as List)
               .map((suggestion) => {
-            'description': suggestion['placePrediction']['text']['text'], // Korrigierte Extraktion
+            'description': suggestion['placePrediction']['text']['text'],
             'placeId': suggestion['placePrediction']['placeId'],
           })
               .toList();
@@ -89,6 +90,11 @@ class _LocationInputScreenState extends State<LocationInputScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Standort eingeben'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -136,12 +142,7 @@ class _LocationInputScreenState extends State<LocationInputScreen> {
                     onTap: () async {
                       try {
                         String coordinates = await _getCoordinates(_suggestions[index]['placeId']);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProspectGalleryScreen(location: coordinates),
-                          ),
-                        );
+                        Navigator.pop(context, coordinates); // Rückgabe des Standorts
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Fehler: $e')),
