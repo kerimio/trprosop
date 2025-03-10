@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'prospect_detail_screen.dart';
 import 'location_input_screen.dart';
+import 'favorites_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String location;
@@ -20,6 +21,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   String _filter = 'distance'; // Standardfilter: Nächste Entfernung
   List<Map<String, dynamic>> _prospects = [];
   List<Map<String, dynamic>> _filteredProspects = [];
+  Set<int> _favorites = {}; // Set zum Speichern der Indizes der favorisierten Prospekte
+  int _selectedIndex = 0; // Aktiver Index der Navigationsleiste
 
   final List<Map<String, dynamic>> prospects = const [
     {
@@ -121,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     } else if (_filter == 'newest') {
       _filteredProspects.sort((a, b) {
         DateTime dateA = DateTime.parse(a['validUntil'].split('.').reversed.join('-'));
-        DateTime dateB = DateTime.parse(b['validUntil'].split('.').reversed.join('-'));
+        DateTime dateB = DateTime.parse(a['validUntil'].split('.').reversed.join('-'));
         return dateB.compareTo(dateA);
       });
     }
@@ -162,34 +165,40 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return location.contains(', ');
   }
 
+  void _toggleFavorite(int index) {
+    setState(() {
+      if (_favorites.contains(index)) {
+        _favorites.remove(index);
+      } else {
+        _favorites.add(index);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Bildschirmgröße und SafeArea-Padding abrufen
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final safeAreaPadding = MediaQuery.of(context).padding;
 
-    // Responsive Dimensionen berechnen
     final double padding = screenWidth < 360 ? 8.0 : 12.0;
     final double minFontSize = screenWidth < 360 ? 12.0 : 14.0;
     final double iconSizeHeart = screenWidth < 360 ? 14.0 : 16.0;
     final double prospectAspectRatio = screenHeight < 600 ? 0.6 : 0.55;
     final double gridSpacing = screenWidth < 360 ? 6.0 : 8.0;
 
-    // Dynamische Höhe der SliverAppBar berechnen mit LayoutBuilder
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         top: true,
-        bottom: true,
+        bottom: false, // Bottom wird von der NavigationBar abgedeckt
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final double baseExpandedHeight = screenHeight < 600 ? 200.0 : 220.0; // Erhöhte Basis-Höhe
+            final double baseExpandedHeight = screenHeight < 600 ? 200.0 : 220.0;
             final double expandedHeight = baseExpandedHeight + safeAreaPadding.top;
 
             return CustomScrollView(
               slivers: [
-                // Obere Leiste (SliverAppBar)
                 SliverAppBar(
                   backgroundColor: const Color(0xFFF5F5F5),
                   elevation: 0,
@@ -274,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                           SizedBox(height: padding / 2),
                           SizedBox(
-                            height: minFontSize * 6, // Dynamische Höhe basierend auf Font-Größe
+                            height: minFontSize * 6,
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: Row(
@@ -316,7 +325,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
-                // GridView für Prospekte
                 SliverPadding(
                   padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding),
                   sliver: SliverGrid(
@@ -345,6 +353,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         final imageUrl = imageUrls != null && imageUrls.isNotEmpty
                             ? imageUrls[0]
                             : 'https://via.placeholder.com/150';
+
+                        final isFavorite = _favorites.contains(index);
 
                         return FadeTransition(
                           opacity: _fadeAnimation,
@@ -376,10 +386,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               children: [
                                 Row(
                                   children: [
-                                    Icon(
-                                      Icons.favorite_border,
-                                      color: const Color(0xFFF44336),
-                                      size: iconSizeHeart,
+                                    IconButton(
+                                      icon: Icon(
+                                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                                        color: const Color(0xFFF44336),
+                                        size: iconSizeHeart,
+                                      ),
+                                      onPressed: () => _toggleFavorite(index),
                                     ),
                                     SizedBox(width: padding / 2),
                                     Expanded(
@@ -466,7 +479,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
-                // Spacer am unteren Rand, um den SafeArea-Bereich zu berücksichtigen
                 SliverToBoxAdapter(
                   child: SizedBox(height: safeAreaPadding.bottom),
                 ),
@@ -474,6 +486,41 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             );
           },
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+          if (index == 0) {
+            // Prospekte (bereits aktive Seite)
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FavoritesScreen(
+                  favorites: _favorites,
+                  filteredProspects: _filteredProspects,
+                  location: widget.location,
+                ),
+              ),
+            );
+          } else if (index == 4) {
+            // Einstellungen (Platzhalter)
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Prospekte'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favoriten'),
+          BottomNavigationBarItem(icon: Icon(Icons.circle), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.circle), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Einstellungen'),
+        ],
+        selectedItemColor: const Color(0xFF4CAF50), // Grün wie kaufDA
+        unselectedItemColor: const Color(0xFF757575), // Grau
+        backgroundColor: Colors.white,
+        elevation: 5,
       ),
     );
   }
