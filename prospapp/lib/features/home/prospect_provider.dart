@@ -32,16 +32,20 @@ class ProspectProvider with ChangeNotifier {
         double distanceB = Geolocator.distanceBetween(userLat, userLon, b['latitude'], b['longitude']);
         return distanceA.compareTo(distanceB);
       });
+      notifyListeners();
     } else if (_filter == 'newest') {
       _filteredProspects.sort((a, b) {
         DateTime dateA = DateTime.parse(a['validUntil'].split('.').reversed.join('-'));
         DateTime dateB = DateTime.parse(b['validUntil'].split('.').reversed.join('-'));
         return dateB.compareTo(dateA);
       });
+      notifyListeners();
     }
-    notifyListeners();
   }
-
+  void setFilter(String filter) {
+    _filter = filter;
+    sortProspects();
+  }
   void filterProspects(String query) {
     if (query.isEmpty) {
       _filteredProspects = List.from(_prospects);

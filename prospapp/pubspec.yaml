@@ -38,7 +38,7 @@ dependencies:
   http: ^1.1.0
   provider: ^6.1.2
   firebase_auth: ^4.16.0
-
+firebase_core: ^2.32.0  # Füge dies hinzu, da es für Firebase-Initialisierung benötigt wird
 dev_dependencies:
   flutter_test:
     sdk: flutter

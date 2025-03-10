@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart'; // Für Icons, StatefulWidget, Scaffold, etc.
-import 'package:geolocator/geolocator.dart'; // Für Geolocator
-import 'package:provider/provider.dart'; // Für Provider
-import '../../core/utils/constants.dart'; // Für prospects und categories
-import '../../core/theme/app_colors.dart'; // Für AppColors
-import '../../core/theme/app_text_styles.dart'; // Für AppTextStyles
-import '../../widgets/prospect_card.dart'; // Für ProspectCard-Widget
-import '../../widgets/category_item.dart'; // Für CategoryItem-Widget
-import '../favorites/favorites_screen.dart'; // Für FavoritesScreen
-import '../location/location_input_screen.dart'; // Für LocationInputScreen
-import 'prospect_provider.dart'; // Für ProspectProvider
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
+import '../../core/utils/constants.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
+import '../../widgets/prospect_card.dart';
+import '../../widgets/category_item.dart';
+import '../favorites/favorites_screen.dart';
+import '../location/location_input_screen.dart';
+import 'prospect_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   final String location;
@@ -20,217 +20,186 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  final TextEditingController _searchController = TextEditingController();
-  int _selectedIndex = 0;
+class _HomeScreenState extends State<HomeScreen> {
+  final _searchController = TextEditingController();
+  String _filter = 'distance';
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-    _controller.forward();
-    Provider.of<ProspectProvider>(context, listen: false).loadProspects();
+    // Verzögere loadProspects, bis nach dem Build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ProspectProvider>(context, listen: false).loadProspects();
+    });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
+  void _filterProspects(String query) {
+    Provider.of<ProspectProvider>(context, listen: false).filterProspects(query);
+  }
+
+  void _changeFilter(String filter) {
+    setState(() {
+      _filter = filter;
+    });
+    Provider.of<ProspectProvider>(context, listen: false).setFilter(filter);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    final safeAreaPadding = MediaQuery.of(context).padding;
-
     final double padding = screenWidth < 360 ? 8.0 : 12.0;
     final double minFontSize = screenWidth < 360 ? 12.0 : 14.0;
-    final double prospectAspectRatio = screenHeight < 600 ? 0.6 : 0.55;
-    final double gridSpacing = screenWidth < 360 ? 6.0 : 8.0;
+    final double gridSpacing = screenWidth < 360 ? 4.0 : 8.0;
+    final double prospectAspectRatio = MediaQuery.of(context).size.height < 600 ? 0.6 : 0.55;
 
-    return Consumer<ProspectProvider>(
-      builder: (context, provider, child) {
-        return Scaffold(
-          body: SafeArea(
-            top: true,
-            bottom: false,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final double baseExpandedHeight = screenHeight < 600 ? 200.0 : 220.0;
-                final double expandedHeight = baseExpandedHeight + safeAreaPadding.top;
+    final provider = Provider.of<ProspectProvider>(context);
 
-                return CustomScrollView(
-                  slivers: [
-                    SliverAppBar(
-                      backgroundColor: AppColors.background,
-                      elevation: 0,
-                      pinned: false,
-                      floating: true,
-                      snap: true,
-                      expandedHeight: expandedHeight,
-                      flexibleSpace: FlexibleSpaceBar(
-                        background: Padding(
-                          padding: EdgeInsets.all(padding).copyWith(top: padding + safeAreaPadding.top),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Angebote für deinen Standort',
-                                    style: AppTextStyles.prospectSubtitle(minFontSize),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.location_on,
-                                      color: AppColors.primary,
-                                      size: minFontSize * 1.5,
-                                    ),
-                                    onPressed: widget.onLocationChange,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: padding / 2),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.white,
-                                  borderRadius: BorderRadius.circular(30),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.grey.withOpacity(0.2),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: TextField(
-                                  controller: _searchController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Suche nach Produkten, Händler & mehr',
-                                    hintStyle: TextStyle(
-                                      color: AppColors.textGrey,
-                                      fontSize: minFontSize,
-                                    ),
-                                    border: InputBorder.none,
-                                    prefixIcon: Icon(
-                                      Icons.search,
-                                      color: AppColors.textGrey,
-                                      size: minFontSize * 1.5,
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: padding * 1.5, vertical: padding),
-                                  ),
-                                  onSubmitted: (value) async {
-                                    if (value.isNotEmpty) {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => const LocationInputScreen()),
-                                      );
-                                      if (result != null) {
-                                        widget.onLocationChange();
-                                        provider.setLocation(result);
-                                        provider.filterProspects('');
-                                      }
-                                    }
-                                  },
-                                  onChanged: (value) => provider.filterProspects(value),
-                                ),
-                              ),
-                              SizedBox(height: padding / 2),
-                              SizedBox(
-                                height: minFontSize * 6,
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: categories.map((category) {
-                                      return CategoryItem(category: category);
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                            ],
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: const Text('Prospekte'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () => _showFilterDialog(),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(padding),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Suche nach Prospekten...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(padding),
+                  ),
+                ),
+                onChanged: _filterProspects,
+              ),
+            ),
+            Expanded(
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(horizontal: padding),
+                    sliver: SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: minFontSize * 6,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: categories.map((category) {
+                              return CategoryItem(category: category);
+                            }).toList(),
                           ),
                         ),
                       ),
                     ),
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: gridSpacing,
-                          mainAxisSpacing: gridSpacing,
-                          childAspectRatio: prospectAspectRatio,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                            return ProspectCard(
-                              prospect: provider.filteredProspects[index],
-                              location: provider.location,
-                              index: index,
-                              isFavorite: provider.favorites.contains(index),
-                              onFavoriteToggle: () => provider.toggleFavorite(index),
-                            );
-                          },
-                          childCount: provider.filteredProspects.length,
-                        ),
+                  ),
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding),
+                    sliver: SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: gridSpacing,
+                        mainAxisSpacing: gridSpacing,
+                        childAspectRatio: prospectAspectRatio,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                          return ProspectCard(
+                            prospect: provider.filteredProspects[index],
+                            location: provider.location,
+                            index: index,
+                            isFavorite: provider.favorites.contains(index),
+                            onFavoriteToggle: () => provider.toggleFavorite(index),
+                          );
+                        },
+                        childCount: provider.filteredProspects.length,
                       ),
                     ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(height: safeAreaPadding.bottom),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _selectedIndex,
-            onTap: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-              if (index == 0) {
-                // Prospekte (bereits aktive Seite)
-              } else if (index == 1) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FavoritesScreen(
-                      favorites: provider.favorites,
-                      filteredProspects: provider.filteredProspects,
-                      location: provider.location,
-                    ),
                   ),
-                );
-              } else if (index == 4) {
-                // Einstellungen (Platzhalter)
-              }
-            },
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Prospekte'),
-              BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favoriten'),
-              BottomNavigationBarItem(icon: Icon(Icons.circle), label: ''),
-              BottomNavigationBarItem(icon: Icon(Icons.circle), label: ''),
-              BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Einstellungen'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0, // Home ist der aktive Tab
+        onTap: (index) {
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FavoritesScreen(
+                  favorites: provider.favorites,
+                  filteredProspects: provider.filteredProspects,
+                  location: provider.location,
+                ),
+              ),
+            );
+          } else if (index == 4) {
+            // Einstellungen (Platzhalter)
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Prospekte'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favoriten'),
+          BottomNavigationBarItem(icon: Icon(Icons.circle), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.circle), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Einstellungen'),
+        ],
+        selectedItemColor: const Color(0xFF4CAF50),
+        unselectedItemColor: const Color(0xFF757575),
+        backgroundColor: Colors.white,
+        elevation: 5,
+      ),
+    );
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Filter'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: const Text('Entfernung'),
+                value: 'distance',
+                groupValue: _filter,
+                onChanged: (value) {
+                  Navigator.pop(context);
+                  _changeFilter(value!);
+                },
+              ),
+              RadioListTile<String>(
+                title: const Text('Neueste'),
+                value: 'newest',
+                groupValue: _filter,
+                onChanged: (value) {
+                  Navigator.pop(context);
+                  _changeFilter(value!);
+                },
+              ),
             ],
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: AppColors.textGrey,
-            backgroundColor: AppColors.white,
-            elevation: 5,
           ),
         );
       },

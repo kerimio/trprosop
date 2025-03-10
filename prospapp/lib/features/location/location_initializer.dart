@@ -1,39 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'core/theme/app_theme.dart';
-import 'features/auth/login_screen.dart';
-import 'features/home/home_screen.dart';
-import 'features/home/prospect_provider.dart';
-import 'features/location/location_input_screen.dart';
+import 'package:provider/provider.dart';
+import '../home/home_screen.dart';
+import '../home/prospect_provider.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(const ProspektApp());
-}
-
-class ProspektApp extends StatelessWidget {
-  const ProspektApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ProspectProvider(),
-      child: MaterialApp(
-        title: 'Prospekt App',
-        theme: AppTheme.lightTheme,
-        home: const LoginScreen(),
-      ),
-    );
-  }
-}
-
-// Lass LocationInitializer als eigenständiges Widget, wird im LoginScreen genutzt
 class LocationInitializer extends StatefulWidget {
   const LocationInitializer({super.key});
 
@@ -97,12 +67,53 @@ class _LocationInitializerState extends State<LocationInitializer> {
         if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
           return const LocationInputScreen();
         }
-        Provider.of<ProspectProvider>(context, listen: false).setLocation(snapshot.data!);
+        // Verschiebe setLocation außerhalb des Build-Prozesses
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Provider.of<ProspectProvider>(context, listen: false).setLocation(snapshot.data!);
+        });
         return HomeScreen(
           location: snapshot.data!,
           onLocationChange: _onLocationChange,
         );
       },
+    );
+  }
+}
+
+class LocationInputScreen extends StatefulWidget {
+  const LocationInputScreen({super.key});
+
+  @override
+  _LocationInputScreenState createState() => _LocationInputScreenState();
+}
+
+class _LocationInputScreenState extends State<LocationInputScreen> {
+  final _locationController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Standort eingeben')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _locationController,
+              decoration: const InputDecoration(labelText: 'Standort (z. B. 37.7749, -122.4194)'),
+              keyboardType: TextInputType.text,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, _locationController.text);
+              },
+              child: const Text('Bestätigen'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
