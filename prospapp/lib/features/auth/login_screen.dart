@@ -19,13 +19,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _checkCurrentUser();
+    // _checkCurrentUser(); // Kommentiert, um den LoginScreen zu sehen
   }
 
   void _checkCurrentUser() {
     User? user = _auth.currentUser;
     if (user != null) {
-      // Verzögere die Navigation, bis der Build abgeschlossen ist
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(
           context,
@@ -46,7 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erfolgreich angemeldet!')),
       );
-      // Verzögere die Navigation, um Konflikte zu vermeiden
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(
           context,
