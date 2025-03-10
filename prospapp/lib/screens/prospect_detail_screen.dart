@@ -16,93 +16,133 @@ class ProspectDetailScreen extends StatelessWidget {
     final imageUrls = prospect['imageUrls'] as List<dynamic>?;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5), // Heller Hintergrund wie im HomeScreen
       appBar: AppBar(
         title: Text(prospect['store']),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFFE0B2), Colors.white],
-          ),
-        ),
+      body: SafeArea(
+        bottom: true, // Sicherstellen, dass die untere Systemleiste berücksichtigt wird
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  prospect['store'],
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF212121), // Dunkelgrau wie im HomeScreen
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
                   children: [
+                    const Icon(
+                      Icons.location_on,
+                      size: 14,
+                      color: Color(0xFF757575), // Grau wie im HomeScreen
+                    ),
+                    const SizedBox(width: 5),
                     Text(
-                      prospect['store'],
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineLarge
-                          ?.copyWith(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, size: 16, color: Color(0xFFAB47BC)),
-                        const SizedBox(width: 5),
-                        Text(
-                          'Entfernung: $distance km',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today, size: 16, color: Color(0xFFAB47BC)),
-                        const SizedBox(width: 5),
-                        Text(
-                          'Gültig bis: ${prospect['validUntil']}',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
+                      'Entfernung: $distance m', // Anpassung an Metern wie im HomeScreen
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF757575),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              imageUrls != null && imageUrls.isNotEmpty
-                  ? ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: imageUrls.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Image.network(
-                        imageUrls[index],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 200,
-                            color: Colors.grey,
-                            child: const Center(child: Text('Bild nicht verfügbar')),
-                          );
-                        },
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: Color(0xFF757575), // Grau wie im HomeScreen
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Gültig bis: ${prospect['validUntil']}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF757575),
                       ),
                     ),
-                  );
-                },
-              )
-                  : const Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Text(
-                  'Keine Bilder verfügbar',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                imageUrls != null && imageUrls.isNotEmpty
+                    ? ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: imageUrls.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white, // Weißer Hintergrund wie im HomeScreen
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: AspectRatio(
+                                aspectRatio: 1.0, // Quadratisches Bild wie im HomeScreen
+                                child: Image.network(
+                                  imageUrls[index],
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey,
+                                      child: const Center(child: Text('Bild nicht verfügbar')),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            if (prospect['isNew'] == true)
+                              Positioned(
+                                top: 5,
+                                left: 5,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF44336), // Rot wie im HomeScreen
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Text(
+                                    'NEU',
+                                    style: TextStyle(color: Colors.white, fontSize: 12),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                )
+                    : const Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text(
+                    'Keine Bilder verfügbar',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

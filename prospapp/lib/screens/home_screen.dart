@@ -23,10 +23,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   final List<Map<String, dynamic>> prospects = const [
     {
-      'store': 'Lidl',
+      'store': 'Woolworth',
       'latitude': 37.785834,
       'longitude': -122.436,
-      'validUntil': '15.03.2025',
+      'validUntil': '30.03.2025',
       'imageUrls': [
         'https://picsum.photos/150?random=1',
         'https://picsum.photos/150?random=2',
@@ -35,58 +35,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'isNew': true,
     },
     {
-      'store': 'Lidl',
-      'latitude': 37.785834,
-      'longitude': -122.436,
-      'validUntil': '15.03.2025',
-      'imageUrls': [
-        'https://picsum.photos/150?random=1',
-        'https://picsum.photos/150?random=2',
-        'https://picsum.photos/150?random=3',
-      ],
-      'isNew': true,
-    },
-    {
-      'store': 'Lidl',
-      'latitude': 37.785834,
-      'longitude': -122.436,
-      'validUntil': '15.03.2025',
-      'imageUrls': [
-        'https://picsum.photos/150?random=1',
-        'https://picsum.photos/150?random=2',
-        'https://picsum.photos/150?random=3',
-      ],
-      'isNew': true,
-    },
-    {
-      'store': 'Lidl',
-      'latitude': 37.785834,
-      'longitude': -122.436,
-      'validUntil': '15.03.2025',
-      'imageUrls': [
-        'https://picsum.photos/150?random=1',
-        'https://picsum.photos/150?random=2',
-        'https://picsum.photos/150?random=3',
-      ],
-      'isNew': true,
-    },
-    {
-      'store': 'Lidl',
-      'latitude': 37.785834,
-      'longitude': -122.436,
-      'validUntil': '15.03.2025',
-      'imageUrls': [
-        'https://picsum.photos/150?random=1',
-        'https://picsum.photos/150?random=2',
-        'https://picsum.photos/150?random=3',
-      ],
-      'isNew': true,
-    },
-    {
-      'store': 'REWE',
+      'store': 'toom Baumarkt',
       'latitude': 37.795834,
       'longitude': -122.426,
-      'validUntil': '20.03.2025',
+      'validUntil': '25.03.2025',
       'imageUrls': [
         'https://picsum.photos/150?random=4',
         'https://picsum.photos/150?random=5',
@@ -95,10 +47,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'isNew': true,
     },
     {
-      'store': 'toom Baumarkt',
+      'store': 'REWE',
       'latitude': 37.805834,
       'longitude': -122.416,
-      'validUntil': '25.03.2025',
+      'validUntil': '20.03.2025',
       'imageUrls': [
         'https://picsum.photos/150?random=7',
         'https://picsum.photos/150?random=8',
@@ -106,10 +58,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'isNew': false,
     },
     {
-      'store': 'Woolworth',
+      'store': 'Lidl',
       'latitude': 37.815834,
       'longitude': -122.406,
-      'validUntil': '30.03.2025',
+      'validUntil': '15.03.2025',
       'imageUrls': [
         'https://picsum.photos/150?random=9',
         'https://picsum.photos/150?random=10',
@@ -191,7 +143,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   String calculateDistance(double userLat, double userLon, double storeLat, double storeLon) {
     double distanceInMeters = Geolocator.distanceBetween(userLat, userLon, storeLat, storeLon);
-    return distanceInMeters.toStringAsFixed(0); // In Metern, ohne Dezimalstellen
+    if (distanceInMeters > 990) {
+      double distanceInKm = distanceInMeters / 1000;
+      return '${distanceInKm.toStringAsFixed(1)} km';
+    } else {
+      return '${distanceInMeters.toStringAsFixed(0)} m';
+    }
+  }
+
+  String calculateDaysLeft(String validUntil) {
+    DateTime currentDate = DateTime(2025, 3, 9); // Aktuelles Datum: 9. März 2025
+    DateTime expiryDate = DateTime.parse(validUntil.split('.').reversed.join('-'));
+    int daysLeft = expiryDate.difference(currentDate).inDays;
+    return '$daysLeft Tage gültig';
   }
 
   bool isCoordinates(String location) {
@@ -200,277 +164,315 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    // Bildschirmgröße und SafeArea-Padding abrufen
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final safeAreaPadding = MediaQuery.of(context).padding;
+
+    // Responsive Dimensionen berechnen
+    final double padding = screenWidth < 360 ? 8.0 : 12.0;
+    final double minFontSize = screenWidth < 360 ? 12.0 : 14.0;
+    final double iconSizeHeart = screenWidth < 360 ? 14.0 : 16.0;
+    final double prospectAspectRatio = screenHeight < 600 ? 0.6 : 0.55;
+    final double gridSpacing = screenWidth < 360 ? 6.0 : 8.0;
+
+    // Dynamische Höhe der SliverAppBar berechnen mit LayoutBuilder
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5), // Heller Hintergrund
+      backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        bottom: true, // Sicherstellen, dass die untere Systemleiste berücksichtigt wird
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0), // Globale Padding-Anpassung
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Angebote für deinen Standort',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF757575), // Grau
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.location_on, color: Color(0xFF4CAF50)), // Grün
-                    onPressed: widget.onLocationChange,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Suche nach Produkten, Händler & mehr',
-                    hintStyle: const TextStyle(color: Color(0xFF757575)), // Grau
-                    border: InputBorder.none,
-                    prefixIcon: const Icon(Icons.search, color: Color(0xFF757575)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                  ),
-                  onSubmitted: (value) async {
-                    if (value.isNotEmpty) {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LocationInputScreen()),
-                      );
-                      if (result != null) {
-                        widget.onLocationChange();
-                        setState(() {
-                          _filterProspects('');
-                        });
-                      }
-                    }
-                  },
-                  onChanged: (value) => _filterProspects(value),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: categories.map((category) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 15.0),
+        top: true,
+        bottom: true,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final double baseExpandedHeight = screenHeight < 600 ? 200.0 : 220.0; // Erhöhte Basis-Höhe
+            final double expandedHeight = baseExpandedHeight + safeAreaPadding.top;
+
+            return CustomScrollView(
+              slivers: [
+                // Obere Leiste (SliverAppBar)
+                SliverAppBar(
+                  backgroundColor: const Color(0xFFF5F5F5),
+                  elevation: 0,
+                  pinned: false,
+                  floating: true,
+                  snap: true,
+                  expandedHeight: expandedHeight,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Padding(
+                      padding: EdgeInsets.all(padding).copyWith(top: padding + safeAreaPadding.top),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: const Color(0xFF4CAF50).withOpacity(0.1), // Grün
-                            child: Icon(category['icon'], color: const Color(0xFF4CAF50)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Angebote für deinen Standort',
+                                style: TextStyle(
+                                  fontSize: minFontSize,
+                                  color: const Color(0xFF757575),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.location_on,
+                                  color: const Color(0xFF4CAF50),
+                                  size: minFontSize * 1.5,
+                                ),
+                                onPressed: widget.onLocationChange,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 5),
-                          Text(
-                            category['label'],
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF757575), // Grau
+                          SizedBox(height: padding / 2),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: 'Suche nach Produkten, Händler & mehr',
+                                hintStyle: TextStyle(
+                                  color: const Color(0xFF757575),
+                                  fontSize: minFontSize,
+                                ),
+                                border: InputBorder.none,
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: const Color(0xFF757575),
+                                  size: minFontSize * 1.5,
+                                ),
+                                contentPadding:
+                                EdgeInsets.symmetric(horizontal: padding * 1.5, vertical: padding),
+                              ),
+                              onSubmitted: (value) async {
+                                if (value.isNotEmpty) {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => const LocationInputScreen()),
+                                  );
+                                  if (result != null) {
+                                    widget.onLocationChange();
+                                    setState(() {
+                                      _filterProspects('');
+                                    });
+                                  }
+                                }
+                              },
+                              onChanged: (value) => _filterProspects(value),
+                            ),
+                          ),
+                          SizedBox(height: padding / 2),
+                          SizedBox(
+                            height: minFontSize * 6, // Dynamische Höhe basierend auf Font-Größe
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: categories.map((category) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(right: padding),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        CircleAvatar(
+                                          radius: minFontSize * 1.5,
+                                          backgroundColor:
+                                          const Color(0xFF4CAF50).withOpacity(0.1),
+                                          child: Icon(
+                                            category['icon'],
+                                            color: const Color(0xFF4CAF50),
+                                            size: minFontSize * 1.5,
+                                          ),
+                                        ),
+                                        SizedBox(height: padding / 2),
+                                        Text(
+                                          category['label'],
+                                          style: TextStyle(
+                                            fontSize: minFontSize - 2.0,
+                                            color: const Color(0xFF757575),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              GridView.builder(
-                shrinkWrap: true, // Wichtig, damit GridView in SingleChildScrollView passt
-                physics: const NeverScrollableScrollPhysics(), // Scrolling wird von SingleChildScrollView übernommen
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  childAspectRatio: 0.75,
-                ),
-                itemCount: _filteredProspects.length,
-                itemBuilder: (context, index) {
-                  String distance = 'N/A';
-                  if (isCoordinates(widget.location)) {
-                    final List<String> coords = widget.location.split(', ');
-                    final double userLat = double.parse(coords[0]);
-                    final double userLon = double.parse(coords[1]);
-                    distance = calculateDistance(
-                      userLat,
-                      userLon,
-                      _filteredProspects[index]['latitude'],
-                      _filteredProspects[index]['longitude'],
-                    );
-                  }
+                // GridView für Prospekte
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: gridSpacing,
+                      mainAxisSpacing: gridSpacing,
+                      childAspectRatio: prospectAspectRatio,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                        String distance = 'N/A';
+                        if (isCoordinates(widget.location)) {
+                          final List<String> coords = widget.location.split(', ');
+                          final double userLat = double.parse(coords[0]);
+                          final double userLon = double.parse(coords[1]);
+                          distance = calculateDistance(
+                            userLat,
+                            userLon,
+                            _filteredProspects[index]['latitude'],
+                            _filteredProspects[index]['longitude'],
+                          );
+                        }
 
-                  final imageUrls = _filteredProspects[index]['imageUrls'] as List<dynamic>?;
-                  final imageUrl = imageUrls != null && imageUrls.isNotEmpty
-                      ? imageUrls[0]
-                      : 'https://via.placeholder.com/150';
+                        final imageUrls = _filteredProspects[index]['imageUrls'] as List<dynamic>?;
+                        final imageUrl = imageUrls != null && imageUrls.isNotEmpty
+                            ? imageUrls[0]
+                            : 'https://via.placeholder.com/150';
 
-                  return FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) =>
-                                ProspectDetailScreen(
-                                  prospect: _filteredProspects[index],
-                                  distance: distance,
+                        return FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation, secondaryAnimation) =>
+                                      ProspectDetailScreen(
+                                        prospect: _filteredProspects[index],
+                                        distance: distance,
+                                      ),
+                                  transitionsBuilder:
+                                      (context, animation, secondaryAnimation, child) {
+                                    return ScaleTransition(
+                                      scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+                                        CurvedAnimation(
+                                            parent: animation, curve: Curves.easeOutCubic),
+                                      ),
+                                      child: child,
+                                    );
+                                  },
                                 ),
-                            transitionsBuilder:
-                                (context, animation, secondaryAnimation, child) {
-                              return ScaleTransition(
-                                scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-                                  CurvedAnimation(
-                                      parent: animation, curve: Curves.easeOutCubic),
-                                ),
-                                child: child,
                               );
                             },
-                          ),
-                        );
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                              child: Stack(
-                                children: [
-                                  Image.network(
-                                    imageUrl,
-                                    height: 120,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        height: 120,
-                                        color: Colors.grey,
-                                        child: const Center(
-                                            child: Text('Bild nicht verfügbar')),
-                                      );
-                                    },
-                                  ),
-                                  if (_filteredProspects[index]['isNew'] == true)
-                                    Positioned(
-                                      top: 5,
-                                      left: 5,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF44336), // Rot
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: const Text(
-                                          'NEU',
-                                          style: TextStyle(
-                                              color: Colors.white, fontSize: 12),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _filteredProspects[index]['store'],
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineLarge
-                                        ?.copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF212121), // Dunkelgrau
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.location_on,
-                                          size: 14, color: Color(0xFF757575)), // Grau
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        '$distance m',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(color: const Color(0xFF757575)),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.calendar_today,
-                                          size: 14, color: Color(0xFF757575)), // Grau
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        '${_filteredProspects[index]['validUntil'].split('.').reversed.join('-').substring(0, 10)} gültig',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(color: const Color(0xFF757575)),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                IconButton(
-                                  icon: const Icon(Icons.favorite_border,
-                                      color: Color(0xFFF44336)), // Rot
-                                  onPressed: () {
-                                    // Favoriten-Logik hier
-                                  },
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.favorite_border,
+                                      color: const Color(0xFFF44336),
+                                      size: iconSizeHeart,
+                                    ),
+                                    SizedBox(width: padding / 2),
+                                    Expanded(
+                                      child: Text(
+                                        _filteredProspects[index]['store'],
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineLarge
+                                            ?.copyWith(
+                                          fontSize: minFontSize,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF212121),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: padding / 2),
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(padding),
+                                    child: AspectRatio(
+                                      aspectRatio: prospectAspectRatio,
+                                      child: Image.network(
+                                        imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            color: Colors.grey,
+                                            child: const Center(
+                                                child: Text('Bild nicht verfügbar')),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(top: padding / 2),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${calculateDaysLeft(_filteredProspects[index]['validUntil'])} - $distance',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                            color: const Color(0xFF757575),
+                                            fontSize: minFontSize - 2.0,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (_filteredProspects[index]['isNew'] == true)
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: padding / 2, vertical: padding / 4),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF44336),
+                                            borderRadius: BorderRadius.circular(padding / 2),
+                                          ),
+                                          child: Text(
+                                            'NEU',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: minFontSize - 2.0,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
+                      childCount: _filteredProspects.length,
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
+                  ),
+                ),
+                // Spacer am unteren Rand, um den SafeArea-Bereich zu berücksichtigen
+                SliverToBoxAdapter(
+                  child: SizedBox(height: safeAreaPadding.bottom),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
