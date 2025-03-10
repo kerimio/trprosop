@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
-import 'screens/home_screen.dart';
-import 'screens/location_input_screen.dart';
-
+import 'core/theme/app_theme.dart';
+import 'features/home/home_screen.dart';
+import 'features/home/prospect_provider.dart';
+import 'features/location/location_input_screen.dart';
 void main() {
   runApp(const ProspektApp());
 }
@@ -12,48 +14,13 @@ class ProspektApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Prospekt App',
-      theme: ThemeData(
-        primaryColor: const Color(0xFF4CAF50), // Grün
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5), // Heller Hintergrund
-        textTheme: const TextTheme(
-          headlineLarge: TextStyle(
-            fontFamily: 'Nunito',
-            fontWeight: FontWeight.w800,
-            fontSize: 28,
-            color: Color(0xFF212121), // Dunkelgrau
-          ),
-          bodyMedium: TextStyle(
-            fontFamily: 'Nunito',
-            fontWeight: FontWeight.normal,
-            fontSize: 14,
-            color: Color(0xFF757575), // Grau
-          ),
-          labelLarge: TextStyle(
-            fontFamily: 'Nunito',
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.white,
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4CAF50), // Grün
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-            elevation: 5,
-          ),
-        ),
-        cardTheme: CardTheme(
-          elevation: 5,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          color: Colors.white,
-        ),
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    return ChangeNotifierProvider(
+      create: (context) => ProspectProvider(),
+      child: MaterialApp(
+        title: 'Prospekt App',
+        theme: AppTheme.lightTheme,
+        home: const LocationInitializer(),
       ),
-      home: const LocationInitializer(),
     );
   }
 }
@@ -101,6 +68,15 @@ class _LocationInitializerState extends State<LocationInitializer> {
     return result ?? '';
   }
 
+  void _onLocationChange() async {
+    final newLocation = await _navigateToLocationInput();
+    if (newLocation != null && newLocation.isNotEmpty) {
+      setState(() {
+        _locationFuture = Future.value(newLocation);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
@@ -112,19 +88,10 @@ class _LocationInitializerState extends State<LocationInitializer> {
         if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
           return const LocationInputScreen();
         }
+        Provider.of<ProspectProvider>(context, listen: false).setLocation(snapshot.data!);
         return HomeScreen(
           location: snapshot.data!,
-          onLocationChange: () async {
-            final newLocation = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const LocationInputScreen()),
-            );
-            if (newLocation != null && newLocation.isNotEmpty) {
-              setState(() {
-                _locationFuture = Future.value(newLocation);
-              });
-            }
-          },
+          onLocationChange: _onLocationChange,
         );
       },
     );

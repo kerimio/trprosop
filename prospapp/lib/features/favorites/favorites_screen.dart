@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'prospect_detail_screen.dart';
+import '../../core/utils/helpers.dart'; // Für calculateDistance, calculateDaysLeft
+import '../prospect/prospect_detail_screen.dart';
 
 class FavoritesScreen extends StatelessWidget {
   final Set<int> favorites;
